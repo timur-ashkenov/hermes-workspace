@@ -201,6 +201,23 @@ function normalizeModelCatalogEntries(
     .filter(isHermesCatalogEntry)
 }
 
+function isDownloadedModel(entry: ModelCatalogEntry): boolean {
+  if (typeof entry === 'string') return true
+  const record = entry as Record<string, unknown>
+  const status = readModelText(record.status).toLowerCase()
+  const downloaded = record.downloaded
+  const active = record.active
+  if (active === true) return true
+  if (downloaded === true) return true
+  if (status === 'downloaded' || status === 'ready' || status === 'active') return true
+  return false
+}
+
+function preferDownloadedModels(models: Array<ModelCatalogEntry>): Array<ModelCatalogEntry> {
+  const downloaded = models.filter(isDownloadedModel)
+  return downloaded.length > 0 ? downloaded : models
+}
+
 function deriveConfiguredProviders(models: Array<ModelCatalogEntry>): Array<string> {
   return Array.from(
     new Set(
@@ -258,6 +275,7 @@ async function fetchModels(): Promise<{
       let models = Array.isArray(modelsData.models)
         ? modelsData.models
         : normalizeModelCatalogEntries(modelsData, currentProvider || undefined)
+      models = preferDownloadedModels(models)
       if (models.length === 0 && configuredModel) {
         models = [{ id: configuredModel, name: configuredModel, provider: currentProvider || undefined }]
       }
@@ -307,11 +325,12 @@ async function fetchModels(): Promise<{
           if (fallbackRes.ok) {
             const fallbackData = (await fallbackRes.json()) as
               | { data?: Array<Record<string, unknown>>; models?: Array<Record<string, unknown>> }
-            models = normalizeModelCatalogEntries(fallbackData, currentProvider || undefined)
+            models = preferDownloadedModels(normalizeModelCatalogEntries(fallbackData, currentProvider || undefined))
           }
         } catch { /* ignore fallback failure */ }
       }
 
+      models = preferDownloadedModels(models)
       if (models.length === 0 && configuredModel) {
         models = [{ id: configuredModel, name: configuredModel, provider: currentProvider || undefined }]
       }
@@ -344,7 +363,7 @@ async function fetchModels(): Promise<{
   const payload = (await response.json()) as
     | Array<unknown>
     | { data?: Array<Record<string, unknown>>; models?: Array<Record<string, unknown>> }
-  let models = normalizeModelCatalogEntries(payload, currentProvider || undefined)
+  let models = preferDownloadedModels(normalizeModelCatalogEntries(payload, currentProvider || undefined))
   if (models.length === 0 && configuredModel) {
     models = [{ id: configuredModel, name: configuredModel, provider: currentProvider || undefined }]
   }
