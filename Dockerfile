@@ -5,7 +5,7 @@ WORKDIR /app
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 COPY package.json pnpm-lock.yaml .npmrc ./
-RUN npm install -g pnpm && pnpm install --no-frozen-lockfile
+RUN corepack enable && corepack prepare pnpm@10.33.0 --activate && pnpm install --no-frozen-lockfile
 
 COPY . .
 RUN pnpm build
@@ -28,4 +28,3 @@ EXPOSE 3000
 USER hermes
 
 CMD ["node", "server-entry.js"]
-

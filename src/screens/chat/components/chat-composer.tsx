@@ -77,6 +77,7 @@ type ChatComposerProps = {
   onNewSession?: () => void
   onToggleWebSearch?: (enabled: boolean) => void
   webSearchEnabled?: boolean
+  onModelChange?: (model: string) => void
   /** Current thinking level for this session */
   thinkingLevel?: ThinkingLevel
   /** Called when user changes thinking level */
@@ -815,6 +816,7 @@ function ChatComposerComponent({
   onNewSession,
   onToggleWebSearch: _onToggleWebSearch,
   webSearchEnabled,
+  onModelChange,
   thinkingLevel: externalThinkingLevel,
   onThinkingLevelChange,
   onAbort,
@@ -976,14 +978,16 @@ function ChatComposerComponent({
           ? sessionKey.trim()
           : undefined
       setModelNotice(null)
-      setCurrentSelectedModel(getResolvedModelKey(model, provider))
+      const resolvedModel = getResolvedModelKey(model, provider)
+      setCurrentSelectedModel(resolvedModel)
+      onModelChange?.(model)
       modelSwitchMutation.mutate({
         model,
         provider,
         sessionKey: normalizedSessionKey,
       })
     },
-    [modelSwitchMutation, sessionKey],
+    [modelSwitchMutation, onModelChange, sessionKey],
   )
 
   const retryModel = modelNotice?.retryModel ?? ''

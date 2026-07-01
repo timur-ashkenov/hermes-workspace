@@ -489,6 +489,7 @@ export function ChatScreen({
 
   const pendingStartRef = useRef(false)
   const composerHandleRef = useRef<ChatComposerHandle | null>(null)
+  const [selectedComposerModel, setSelectedComposerModel] = useState('')
   // Idempotency guard prevents duplicate sends on paste/attach double-fire.
   const lastSendKeyRef = useRef('')
   const lastSendAtRef = useRef(0)
@@ -1786,7 +1787,7 @@ export function ChatScreen({
         thinking:
           currentThinkingLevel === 'off' ? undefined : currentThinkingLevel,
         fastMode,
-        model: currentModel || undefined,
+        model: selectedComposerModel || currentModel || undefined,
         idempotencyKey: optimisticClientId || crypto.randomUUID(),
       }).catch((err: unknown) => {
         const messageText = err instanceof Error ? err.message : String(err)
@@ -1804,6 +1805,7 @@ export function ChatScreen({
       streamFinish,
       streamStart,
       currentModel,
+      selectedComposerModel,
     ],
   )
 
@@ -2630,6 +2632,7 @@ export function ChatScreen({
               focusKey={`${isNewChat ? 'new' : activeFriendlyId}:${activeCanonicalKey ?? ''}`}
               thinkingLevel={thinkingLevel}
               onThinkingLevelChange={handleThinkingLevelChange}
+              onModelChange={setSelectedComposerModel}
             />
           ) : null}
         </main>
